@@ -1,0 +1,41 @@
+model:
+  vision_encoder:
+    name: "resnet50"
+    type: "vit"
+    params:
+      pretrained: True
+      trainable: False
+
+  language_decoder:
+    name: "/lab/haoq_lab/cse12310520/CV-Project/CV-Project-Image-Captioning/models/pretrained_models/Qwen2.5-3B"
+    type: "gpt2"
+    params:
+      pretrained: True
+      trainable: False
+      hidden_size: 768 
+      max_length: 16
+      temperature: 0.7
+      top_k: 50
+      top_p: 0.9
+
+  connector:
+    type: "mlp"
+    params:
+      input_dim: 2048
+      output_dim: 2048
+      hidden_size: 1024
+      num_layers: 2
+      dropout: 0.3
+
+training:
+  batch_size: 16
+  learning_rate: 5e-4
+  num_epochs: 1
+  optimizer: "adamw"
+  scheduler: "linear"
+
+datasets:
+  train2017: "/lab/haoq_lab/cse12310520/CV-Project/CV-Project-Image-Captioning/datasets/train2017"
+  val2017: "/lab/haoq_lab/cse12310520/CV-Project/CV-Project-Image-Captioning/datasets/val2017"
+  test2017: "/lab/haoq_lab/cse12310520/CV-Project/CV-Project-Image-Captioning/datasets/test2017"
+  annotations_trainval2017: "/lab/haoq_lab/cse12310520/CV-Project/CV-Project-Image-Captioning/datasets/annotations/captions_val2017.json"
