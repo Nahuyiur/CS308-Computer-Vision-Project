@@ -1,0 +1,417 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{CJKutf8}
+\usepackage{indentfirst}
+\usepackage{float}
+\usepackage{ragged2e} % For better text alignment in columns
+
+\definecolor{myteal}{cmyk}{0.5,0.2,0.15,0}
+\usecolortheme[named=myteal]{structure}
+
+% --- Beamer 主题和颜色方案 ---
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% --- 标题信息 ---
+\title[Image Captioning]{From Pixels to Prose: An Architectural Analysis of Image Captioning}
+\author{
+  \begin{CJK}{UTF8}{gbsn}王子恒 \quad 娄毅彬 \quad 方酉城 \quad 芮煜涵\end{CJK}
+}
+\date{\today}
+\institute{SUSTech/Computer Vision} % 您可以填写您的学校或机构名称
+
+% --- Beamer 设置 ---
+\setbeamertemplate{navigation symbols}{} % 隐藏导航按钮
+\setbeameroption{show notes} % 如果您想添加备注，可以取消注释
+
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+
+% =================================
+% --- 标题页 ---
+% =================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% =================================
+% --- 目录 ---
+% =================================
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+% =================================
+% --- 1. 引言 ---
+% =================================
+\section{Introduction}
+
+\begin{frame}{Introduction: What is Image Captioning?}
+  \begin{itemize}
+    \item \textbf{核心任务:} 为给定图像生成流畅、准确的自然语言描述。
+    \item \textbf{技术交叉点:} 计算机视觉 (CV) 与 自然语言处理 (NLP)。
+    \item \textbf{广泛应用:}
+      \begin{itemize}
+        \item 无障碍访问 (Accessibility)
+        \item 内容检索 (Content Retrieval)
+        \item 人机交互 (Human-Computer Interaction)
+      \end{itemize}
+  \end{itemize}
+  \vfill
+  \begin{center}
+      \includegraphics[width=0.7\textwidth]{images/project_logo.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Our Project: A Modular Framework}
+    \begin{block}{核心思想}
+        大多数现代模型遵循 \textbf{编码器-解码器} 范式，但组件选择缺乏系统性分析。
+    \end{block}
+    
+    \begin{itemize}
+        \item \textbf{目标:} 设计一个模块化的视觉-语言框架，以灵活组合和评估不同架构。
+        \item \textbf{实验组件:}
+        \begin{itemize}
+            \item \textbf{视觉编码器:} ResNet, Vision Transformer (ViT), Vision Mamba (Vim)
+            \item \textbf{连接器:} MLP, Q-Former
+            \item \textbf{语言解码器:} GPT-2, Qwen2, LLaMA 3, Mamba
+        \end{itemize}
+        \item \textbf{评估:} 在 \textbf{COCO 数据集} 上，使用 \textbf{BLEU} 和 \textbf{CIDEr} 指标进行评测。
+    \end{itemize}
+    
+    \vfill
+    \begin{block}{项目代码}
+        \url{https://github.com/EarendelH/CV-Project-Image-Captioning}
+    \end{block}
+\end{frame}
+
+% =================================
+% --- 2. 相关工作 ---
+% =================================
+\section{Related Work}
+
+\begin{frame}{The Evolution of Image Captioning Models}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \begin{block}{1. CNN-RNN 时代}
+                \textbf{模型:} Show and Tell \\
+                \textbf{架构:} CNN 编码器 + RNN 解码器 \\
+                \textbf{核心问题:} 信息瓶颈 (Information Bottleneck)
+            \end{block}
+            
+            \begin{block}{2. 注意力机制革命}
+                 \textbf{模型:} Show, Attend and Tell \\
+                 \textbf{创新:} 引入视觉注意力机制，动态聚焦图像区域。\\
+                 \textbf{优点:} 提升细节描述能力，提供可解释性。
+            \end{block}
+        \end{column}
+        
+        \begin{column}{0.5\textwidth}
+            \begin{block}{3. Transformer 的崛起}
+                \textbf{编码器:} Vision Transformer (ViT) \\
+                \textbf{解码器:} Transformer Decoders (e.g., GPT-2) \\
+                \textbf{优势:} 强大的全局上下文建模能力。
+            \end{block}
+            
+            \begin{block}{4. 大视觉语言模型 (LVLMs)}
+                 \textbf{范式:} 冻结的视觉编码器 + 冻结的LLM + 轻量级可训练连接器。\\
+                 \textbf{代表:} LLaVA, BLIP-2
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% =================================
+% --- 3. 方法/架构 ---
+% =================================
+\section{Approach: Core Components}
+
+\begin{frame}{Component 1: Vision Encoders}
+    \begin{itemize}
+        \item \textbf{ResNet (CNN):}
+        \begin{itemize}
+            \item \textbf{优点:} 归纳偏置强 (Locality)，数据高效。
+            \item \textbf{缺点:} 难以捕捉全局关系。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{Vision Transformer (ViT):}
+        \begin{itemize}
+            \item \textbf{优点:} 自注意力机制，全局感受野强。
+            \item \textbf{缺点:} 计算复杂度高 ($O(N^2)$)。
+        \end{itemize}
+        \medskip
+
+        \item \textbf{Vision Mamba (Vim):}
+        \begin{itemize}
+            \item \textbf{优点:} 线性时间复杂度 ($O(N)$)，高效处理高分辨率图像。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{MambaVision (Hybrid):}
+        \begin{itemize}
+             \item CVPR 2025 Nvidia 提出的模型，结合 Mamba 的效率和 Transformer 的自注意力，达到 SOTA 性能。
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Component 2: Language Decoders}
+    \begin{itemize}
+        \item \textbf{Autoregressive Transformers (GPT-2, LLaMA, Qwen):}
+        \begin{itemize}
+            \item \textbf{优点:} 在大规模文本上预训练，拥有丰富的语言和世界知识，生成质量高。
+            \item \textbf{缺点:} 模型巨大，可能产生“幻觉”(Hallucination)。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{Mamba Language Model:}
+        \begin{itemize}
+            \item \textbf{优点:} 基于状态空间模型 (SSM)，线性时间复杂度，处理长序列高效。
+            \item \textbf{缺点:} 作为解码器应用仍在探索中。
+        \end{itemize}
+    \end{itemize}
+    \vfill
+    \begin{center}
+        \includegraphics[width=0.38\textwidth]{images/mambavision_architecture.png}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Component 3: Vision-Language Connectors}
+    \begin{block}{目标}
+        将视觉特征“翻译”成大型语言模型 (LLM) 能够理解的格式。
+    \end{block}
+    
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \textbf{MLP Projector:}
+            \begin{itemize}
+                \item \textbf{方法:} 使用简单的多层感知机 (MLP) 投射特征。
+                \item \textbf{优点:} 简单、高效。
+                \item \textbf{缺点:} 可能将大量冗余的视觉令牌传递给LLM，增加计算负担。
+            \end{itemize}
+        \end{column}
+        
+        \begin{column}{0.5\textwidth}
+            \textbf{Q-Former:}
+            \begin{itemize}
+                \item \textbf{方法:} 使用少量可学习的查询向量通过交叉注意力“审问”视觉特征。
+                \item \textbf{优点:} 智能信息瓶颈，提取简洁摘要，提升性能和效率。
+            \end{itemize}
+            
+        \end{column}
+    \end{columns}
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{images/qformer_architecture.png}
+    \end{center}
+\end{frame}
+
+
+% =================================
+% --- 4. 实验结果 ---
+% =================================
+\section{Experimental Results}
+
+\begin{frame}{Experiment Setup}
+    \begin{itemize}
+        \item \textbf{数据集:}
+        \begin{itemize}
+            \item \textbf{MS COCO2017:} 超过12万张图片，每张有5个人工标注的标题，是行业的黄金标准。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{评估指标:}
+        \begin{itemize}
+            \item \textbf{BLEU:} 衡量n-gram的精确度，但与人类判断相关性较弱。
+            \item \textbf{CIDEr:} 专为字幕设计，通过TF-IDF加权的n-gram相似度衡量共识，与人类判断相关性好。
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Example}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.4\linewidth]{images/example_image.jpg}
+        \caption{Example image}
+        \label{fig:enter-label}
+    \end{figure}
+
+    \begin{description}
+        \item[GT1] An office desk with a row of books and a desktop computer.
+        \item[GT2] A desktop computer next to a laptop computer.
+        \item[GT3] A desk with a laptop, some keyboards, and some books.
+        \item[GT4] There is a desktop computer and a laptop sitting on an organized desk in an office.
+        \item[GT5] An office desk with a monitor, laptop, and books.
+        \item[Generated] Computer desk with a monitor and keyboard on it.
+    \end{description}
+    
+\end{frame}
+
+% ------
+\begin{frame}[fragile]{Ablation 1: Vision Encoders}
+    \frametitle{Ablation Study of Vision Encoders (Decoder: GPT-2, Connector: MLP)}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Model (Vision Encoder)} & \textbf{Architecture} & \textbf{BLEU-1} & \textbf{BLEU-2} & \textbf{BLEU-3} & \textbf{BLEU-4} & \textbf{CIDEr} \\
+    \midrule
+    ResNet-50 & CNN & 59.3 & 44.2 & 26.1 & 20.3 & 90.4 \\
+    vit-base-patch16 & Transformer & 63.7 & 51.1 & 33.6 & 24.3 & 98.8 \\
+    Vision Mamba vim\_tiny & Mamba & 64.7 & 48.7 & 32.4 & 26.2 & 97.1 \\
+    MambaVision & Hybrid Mamba-Transformer & \textbf{68.5} & \textbf{53.2} & \textbf{37.1} & \textbf{28.9} & \textbf{104.2} \\
+    \bottomrule
+    \end{tabular}
+    }
+    \vfill
+    \begin{block}{Takeaway}
+        基于 Transformer 和 Mamba 的架构因其全局上下文建模能力而优于 CNN。混合架构表现最佳。
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Ablation 2: Language Decoders}
+    \frametitle{Ablation Study of Language Decoders (Encoder: ViT-Base, Connector: MLP)}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Model (Language Decoder)} & \textbf{Architecture} & \textbf{BLEU-1} & \textbf{BLEU-2} & \textbf{BLEU-3} & \textbf{BLEU-4} & \textbf{CIDEr} \\
+    \midrule
+    GPT-2 & Transformer & 63.7 & 51.1 & 33.6 & 24.3 & 98.8 \\
+    QWen 3B & Transformer & 65.3 & 53.5 & 34.8 & 26.9 & 105.4 \\
+    LLaMA 3B & Transformer & 66.4 & 52.4 & 34.7 & 27.1 & 108.6 \\
+    Mamba-130m & Mamba & \textbf{69.2} & \textbf{54.3} & \textbf{37.1} & \textbf{29.2} & \textbf{110.7} \\
+    \bottomrule
+    \end{tabular}
+    }
+    \vfill
+    \begin{block}{Takeaway}
+        语言解码器的能力是性能的关键驱动因素。更强大的基础模型（如LLaMA, Mamba）能带来显著的性能提升。
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Ablation 3: Vision-Language Connectors}
+    \frametitle{Ablation Study of Connectors (Encoder: ViT-Base, Decoder: GPT-2)}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccccc}
+    \toprule
+    \textbf{Model (Connector)} & \textbf{Architecture} & \textbf{BLEU-1} & \textbf{BLEU-2} & \textbf{BLEU-3} & \textbf{BLEU-4} & \textbf{CIDEr} & \textbf{Time per epoch} \\
+    \midrule
+    MLP & 2-hidden layer & 63.7 & 51.1 & 33.6 & 24.3 & 98.8 & $\sim$8h \\
+    Q-Former & Transformer & \textbf{68.8} & \textbf{52.7} & \textbf{38.3} & \textbf{28.4} & \textbf{100.4} & $\sim$4h \\
+    \bottomrule
+    \end{tabular}
+    }
+    \vfill
+    \begin{block}{Takeaway}
+        Q-Former 通过其过滤和冻结机制，不仅提升了CIDEr分数，还减少了训练时间，证明了更简洁、清晰的视觉信号的对于LLM的有效性。
+    \end{block}
+\end{frame}
+
+
+% =================================
+% --- 5. Mamba vs Transformer ---
+% =================================
+\section{Bonus: Mamba vs Transformer}
+
+\begin{frame}{Computational Complexity: Linear vs. Quadratic}
+    \frametitle{Inference Time vs. Sequence Length}
+    \begin{figure}[H]
+        \centering
+        \frame{\includegraphics[width=0.8\textwidth]{images/performance_benchmark.png}}
+    \end{figure}
+    
+    \begin{itemize}
+        \item \textbf{Transformer (GPT-2):} 曲线呈 \textbf{二次方} ($O(N^2)$) 增长。序列越长，时间消耗急剧增加。
+        \item \textbf{Mamba:} 曲线呈 \textbf{线性} ($O(N)$) 增长。时间消耗与序列长度成正比，稳定可预测。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Why the Difference? Core Mechanisms}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Transformer: Self-Attention}
+                \begin{itemize}
+                    \item \textbf{工作原理:} 每个词元(token)都需要与序列中\textbf{所有其他}词元进行比较，计算注意力分数。
+                    \item \textbf{复杂度:} "All-to-All" 的比较导致 $O(N^2)$ 的复杂度。
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+        
+        \begin{column}{0.5\textwidth}
+            \begin{exampleblock}{Mamba: State Space Model (SSM)}
+                \begin{itemize}
+                    \item \textbf{工作原理:} 按顺序处理词元，维护一个压缩的“状态”（记忆）。只需关注\textbf{当前词元和内部状态}。
+                    \item \textbf{复杂度:} 线性扫描 (Linear Scan) 导致 $O(N)$ 的复杂度。
+                \end{itemize}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% =================================
+% --- 6. 结论与未来工作 ---
+% =================================
+\section{Conclusion \& Future Work}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item \textbf{架构演进:} Image Captioning 已从简单的 CNN-RNN 发展到复杂的大型视觉语言模型 (LVLM) 范式。
+        \medskip
+        \item \textbf{关键性能驱动因素:}
+        \begin{enumerate}
+            \item \textbf{视觉编码器:} ViT 和 Mamba 的全局上下文建模至关重要。
+            \item \textbf{语言解码器:} 更强大的 LLM (如 LLaMA) 显著提升字幕质量。
+            \item \textbf{连接器:} 智能连接器 (如 Q-Former) 能有效提炼信息，提高效率和性能。
+        \end{enumerate}
+        \medskip
+        \item \textbf{挑战:}
+        \begin{itemize}
+            \item 现有评估指标的局限性。
+            \item 高昂的训练和部署成本。
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Future Work}
+    \begin{itemize}
+        \item \textbf{检索增强生成 (RAG):}
+        \begin{itemize}
+            \item 引入外部知识，提高事实准确性，减少幻觉。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{参数高效微调 (PEFT):}
+        \begin{itemize}
+            \item 使用 LoRA 等技术，降低大模型的微调成本。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{向视频扩展:}
+        \begin{itemize}
+            \item 将模型能力从静态图像扩展到动态视频数据。
+        \end{itemize}
+        \medskip
+        
+        \item \textbf{模型分析与可信赖 AI:}
+        \begin{itemize}
+            \item 开发更鲁棒、可解释、值得信赖的系统。
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% =================================
+% --- 提问环节 ---
+% =================================
+\begin{frame}
+  \begin{center}
+    \Huge \textbf{Thank You!}
+    \\[2em]
+    \Large Questions?
+  \end{center}
+\end{frame}
+
+
+\end{CJK}
+\end{document}
