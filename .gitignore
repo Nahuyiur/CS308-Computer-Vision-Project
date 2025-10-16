@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyTorch
+*.pth
+*.pt
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+__MACOSX/
+
+# Large model files and datasets
+models/pretrained_models/
+*.zip
+*.whl
+*.whl.*
+*.jar
+*.gz
+*.bin
+*.safetensors
+*.msgpack
+*.onnx
+*.h5
+*.ot
+*.pth
+*.run
+
+# Large datasets
+coco-caption/annotations/
+*.json
+
+# Results and outputs
+results/
+outputs/
+logs/
+checkpoints/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Git
+.git/
